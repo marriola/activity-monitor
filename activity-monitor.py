@@ -213,7 +213,7 @@ def get_last_log(date):
     return path + "/" + log_prefix + max_log + log_suffix
 
 def read_log(date=None):
-    global line_count
+    global line_count, out_file
 
     file_name = None
     if date != None:
@@ -244,15 +244,15 @@ def read_log(date=None):
                 out_line = "[{0} {1}]\nmatched '{2}'".format(TODAY_F, line_time, name)
                 log_echo(out_file, out_line)
                     
-            for key, value in match.groupdict().items():
-                prop = "\t{0}:\t{1}".format(key, value)
-                log_echo(out_file, prop)
+                for key, value in match.groupdict().items():
+                    prop = "\t{0}:\t{1}".format(key, value)
+                    log_echo(out_file, prop)
 
-            log_echo(out_file)
+                    log_echo(out_file)
 
-            if hook != None:
-                hook(match, datetime.strptime(TODAY_F + " " + line_time, "%m/%d/%Y %H:%M:%S"))
-            break
+                    if hook != None:
+                        hook(match, datetime.strptime(TODAY_F + " " + line_time, "%m/%d/%Y %H:%M:%S"))
+                        break
 
     file.close()
     if file_name != None:
@@ -300,7 +300,7 @@ REGEXES.append(("disconnect", RE_DISCONNECT, None))
 ################################################################################
 
 def main():
-    global empty_since, online_players, line_count, last_run
+    global empty_since, online_players, line_count, last_run, out_file
 
     args = parse_arguments()
 
@@ -310,14 +310,14 @@ def main():
     if args.reset:
         line_count = 0
 
+    out_file = open_output_log(OUTPUT_LOG)
+
     if last_run < date.today():
         # A new log has started since we last ran. Finish reading the last one and start the next
         read_log(date.today() - timedelta(days=1))
         line_count = 0
 
     read_log()
-
-    out_file = open_output_log(OUTPUT_LOG)
     close_output_log(out_file)
     save_config(CONFIG, config)
 
